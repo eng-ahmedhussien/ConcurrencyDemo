@@ -10,79 +10,84 @@ import Combine
 
 struct DownloadImageAsyncView: View {
     @StateObject private var viewModel = DownloadImageAsyncViewModel()
-        
-        var body: some View{
-            ZStack{
-               Color.black.ignoresSafeArea()
-                if let image = viewModel.image{
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 250,height: 250)
-                        .cornerRadius(20)
-//                        .onTapGesture {
-//                            viewModel.fetImagesWithTask()
-//                        }
-                }
-            }
-            .onAppear{
-                
-               viewModel.fetImageWithDispatchQueue()
-               print("finished")
-                
-//                usingAsync1()
-//               usingAsync2()
-//               usingSync2()
-
-                // 1
-                //viewModel.fetchImagesWithComplpetionClousure()
-                
-                // 2
-                //viewModel.fetImagesWithCombine()
-                
-                // 3
-                //viewModel.fetImagesWithCombine2()
-                
-                // 4
-                //viewModel.fetImagesWithTask()
-                
-                //5
-//                Task {
-//                    
-//                   await viewModel.fetImageWithContinuation()
-//                }
-              
+    
+    var body: some View{
+        ZStack{
+            Color.black.ignoresSafeArea()
+            if let image = viewModel.image{
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 250,height: 250)
+                    .cornerRadius(20)
+                //                        .onTapGesture {
+                //                            viewModel.fetImagesWithTask()
+                //                        }
             }
         }
+        .onAppear{
+            
+//            Task{
+//               await viewModel.fetchImagesWithAsync()
+//               print("finished 1122")
+//            }
+           // print("finished")
+            
+            //usingAsync1()
+            //usingAsync2()
+            //usingSync2()
+            // usingSync1()
+            
+            // 1
+            viewModel.fetchImagesWithEscaping()
+            print("finished")
+            
+            // 2
+            //viewModel.fetImagesWithCombine()
+            
+            // 3
+            //viewModel.fetImagesWithCombine2()
+            
+            // 4
+            //viewModel.fetImagesWithTask()
+            
+            //5
+            //                Task {
+            //
+            //                   await viewModel.fetImageWithContinuation()
+            //                }
+            
+        }
+    }
     
     
     func usingAsync1(){
         DispatchQueue.global().async {
-       
-          for i in 0...10 {
-
-            Thread.sleep(forTimeInterval: 2)
-
-            let res = repeatElement("***", count: i)
-
-            print(res.joined())
-
-          }
+            
+            for i in 0...10 {
+                
+                Thread.sleep(forTimeInterval: 2)
+                
+                let res = repeatElement("***", count: i)
+                
+                print(res.joined())
+                
+            }
         }
-
+        
         print("Finished")
         
         DispatchQueue.global().async {
-
-          for i in 0...10 {
-
-            Thread.sleep(forTimeInterval: 1)
-
-            let res = repeatElement("###", count: i)
-
-            print(res.joined())
-
-          }
+            
+            for i in 0...10 {
+                
+                Thread.sleep(forTimeInterval: 1)
+                
+                let res = repeatElement("###", count: i)
+                
+                print(res.joined())
+                
+            }
         }
         
         
@@ -111,36 +116,36 @@ struct DownloadImageAsyncView: View {
                 
             }
         }
-
+        
         print("Finished")
     }
     func usingSync1(){
         DispatchQueue.global().sync {
-
-          for i in 0...10 {
-
-            Thread.sleep(forTimeInterval: 1)
-
-            let res = repeatElement("***", count: i)
-
-            print(res.joined())
-
-          }
+            
+            for i in 0...10 {
+                
+                Thread.sleep(forTimeInterval: 1)
+                
+                let res = repeatElement("***", count: i)
+                
+                print(res.joined())
+                
+            }
         }
-
+        
         print("Finished")
         
         DispatchQueue.global().sync {
-
-          for i in 0...10 {
-
-            Thread.sleep(forTimeInterval: 1)
-
-            let res = repeatElement("###", count: i)
-
-            print(res.joined())
-
-          }
+            
+            for i in 0...10 {
+                
+                Thread.sleep(forTimeInterval: 1)
+                
+                let res = repeatElement("###", count: i)
+                
+                print(res.joined())
+                
+            }
         }
         
         
@@ -167,7 +172,7 @@ struct DownloadImageAsyncView: View {
                 
             }
         }
-
+        
         print("Finished")
     }
 }
@@ -176,7 +181,7 @@ struct DownloadImageAsyncView: View {
     DownloadImageAsyncView()
 }
 
-
+//MARK: - Services
 class DownloadImageAsyncServices{
     
     let url: String
@@ -202,6 +207,7 @@ class DownloadImageAsyncServices{
     }
     
     func downloadWithEscaping(completionHandler: @escaping (_ image: UIImage? ,_ error: Error?) -> Void){
+        Thread.sleep(forTimeInterval: 10)
         guard let url = getUrl() else {return}
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard
@@ -209,10 +215,11 @@ class DownloadImageAsyncServices{
                 let image = UIImage(data: data),
                 let response = response as? HTTPURLResponse,
                 response.statusCode >= 200 && response.statusCode < 300 else{
-                    completionHandler(nil,error)
+                completionHandler(nil,error)
                 return
-                }
+            }
             completionHandler(image,nil)
+            print("pass 10 second")
         }
         .resume()
     }
@@ -228,21 +235,21 @@ class DownloadImageAsyncServices{
     
     func downloadImageWithContinuation() async throws -> UIImage?{
         
-       return try await withCheckedThrowingContinuation { continuation in
-           guard let url = getUrl() else {return}
-           URLSession.shared.dataTask(with: url) { data, response, error in
-               let image = self.handleResponse(data: data, response: response as? HTTPURLResponse)
-               if let image = image {
-                   continuation.resume(returning: image)
-               }
-               else if let error = error {
-                   continuation.resume(throwing: error as! Never)
-               }
-               else{
-                   continuation.resume(throwing: error as! Never)
-               }
-           }
-           .resume()
+        return try await withCheckedThrowingContinuation { continuation in
+            guard let url = getUrl() else {return}
+            URLSession.shared.dataTask(with: url) { data, response, error in
+                let image = self.handleResponse(data: data, response: response as? HTTPURLResponse)
+                if let image = image {
+                    continuation.resume(returning: image)
+                }
+                else if let error = error {
+                    continuation.resume(throwing: error as! Never)
+                }
+                else{
+                    continuation.resume(throwing: error as! Never)
+                }
+            }
+            .resume()
         }
     }
     
@@ -268,27 +275,27 @@ class DownloadImageAsyncServices{
         
     }
     
-//    func downloadImageWithDispatchQueue() -> AnyPublisher<UIImage?,Error>{
-//        
-//        guard let url = self.getUrl() else {return Fail(error: URLError(.badURL)).eraseToAnyPublisher()}
-//        
-//        DispatchQueue.global().sync {
-//            return URLSession.shared.dataTaskPublisher(for: url)
-//                .map(handleResponse)
-//                .mapError{$0}
-//                .eraseToAnyPublisher()
-//        }
-//    }
+    //    func downloadImageWithDispatchQueue() -> AnyPublisher<UIImage?,Error>{
+    //
+    //        guard let url = self.getUrl() else {return Fail(error: URLError(.badURL)).eraseToAnyPublisher()}
+    //
+    //        DispatchQueue.global().sync {
+    //            return URLSession.shared.dataTaskPublisher(for: url)
+    //                .map(handleResponse)
+    //                .mapError{$0}
+    //                .eraseToAnyPublisher()
+    //        }
+    //    }
 }
 
-
+//MARK: - ViewModel
 class DownloadImageAsyncViewModel: ObservableObject{
     
     @Published var image:UIImage? = nil
     let dataServices = DownloadImageAsyncServices(url: "https://picsum.photos/200")
     var cancellables = Set<AnyCancellable>()
     
-    func fetchImagesWithComplpetionClousure(){
+    func fetchImagesWithEscaping(){
         dataServices.downloadWithEscaping { [weak self] image, error in
             if let error = error{
                 print(error.localizedDescription)
@@ -301,7 +308,7 @@ class DownloadImageAsyncViewModel: ObservableObject{
         }
     }
     
-    func fetImagesWithCombine(){
+    func fetchImagesWithCombine(){
         dataServices.downloadWithCombine()
             .sink { completion in
                 switch completion{
@@ -319,7 +326,7 @@ class DownloadImageAsyncViewModel: ObservableObject{
             .store(in: &cancellables)
     }
     
-    func fetImagesWithCombine2(){
+    func fetchImagesWithCombine2(){
         dataServices.downloadWithCombine()
             .receive(on: DispatchQueue.main)
             .sink { completion in
@@ -337,21 +344,23 @@ class DownloadImageAsyncViewModel: ObservableObject{
             .store(in: &cancellables)
     }
     
-    func fetImageWithContinuation() async{
+    func fetchImageWithContinuation() async{
         do {
             guard let image = try await dataServices.downloadImageWithContinuation() else {return}
             self.image = image
         } catch  {
             print(error.localizedDescription)
         }
-       
+        
     }
     
-    func fetImagesWithAsync() async{
+    func fetchImagesWithAsync() async{
         do{
+            try await Task.sleep(nanoseconds: 2 * 1_000_000_000)
             guard let image = try await dataServices.downloadImageWithAsync() else {return}
             await MainActor.run{
                 self.image = image
+                print("finish fetch ")
             }
             
         }catch{
@@ -359,13 +368,14 @@ class DownloadImageAsyncViewModel: ObservableObject{
         }
     }
     
-    func fetImagesWithTask(){
+    func fetchImagesWithTask(){
         Task{
-            await fetImagesWithAsync()
+            await fetchImagesWithAsync()
+            print("finish fetch ")
         }
     }
     
-    func fetImageWithDispatchQueue(){
+    func fetchImageWithDispatchQueue(){
         DispatchQueue.global().sync {
             Thread.sleep(forTimeInterval: 10)
             dataServices.downloadWithCombine()
@@ -380,6 +390,7 @@ class DownloadImageAsyncViewModel: ObservableObject{
                     guard let self = self else {return}
                     DispatchQueue.main.async {
                         self.image = image
+                        print("pass 10 seconde")
                     }
                 }
                 .store(in: &cancellables)

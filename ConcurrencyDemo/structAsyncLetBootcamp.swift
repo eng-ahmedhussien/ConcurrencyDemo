@@ -33,12 +33,8 @@ struct TaskGroupBootcamp: View {
     }
 }
 
-struct TaskGroupBootcamp_Previews: PreviewProvider {
-    static var previews: some View {
-        TaskGroupBootcamp()
-    }
-}
 
+//MARK: - viewModel
 class TaskGroupBootcampViewModel: ObservableObject {
     
     @Published var images: [UIImage] = []
@@ -51,6 +47,7 @@ class TaskGroupBootcampViewModel: ObservableObject {
     }
 }
 
+//MARK: - mangerc
 class TaskGroupBootcampDataManager {
     
     func fetchImagesWithAsyncLet() async throws -> [UIImage] {
